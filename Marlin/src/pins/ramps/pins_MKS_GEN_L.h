@@ -43,6 +43,10 @@
   #define FAN_PIN 9
 #endif
 
+// The same pin as SERVO0_PIN. see https://github.com/makerbase-mks/MKS-GEN_L/blob/master/hardware/MKS%20Gen_L%20V1.0_008/MKS%20Gen_L%20V1.0_008%20PIN.pdf,
+// Wiring guide here https://github.com/makerbase-mks/MKS-GEN_L/blob/master/hardware/Image/MKS_GEN_L_PWC_TFT.png
+#define PS_ON_PIN 11
+
 //
 // CS Pins wired to avoid conflict with the LCD
 // See https://www.thingiverse.com/asset:66604
