@@ -183,25 +183,30 @@ def apply_all_sections(cp):
 # Apply certain config sections from a parsed file
 def apply_sections(cp, ckey='all'):
     blab(f"Apply section key: {ckey}")
-    if ckey == 'all':
+    if ckey.strip() == 'all':
         apply_all_sections(cp)
     else:
-        # Apply the base/root config.ini settings after external files are done
-        if ckey in ('base', 'root'):
-            apply_ini_by_name(cp, 'config:base')
+        sections = map(str.strip, ckey.split('+'))
+        for ckey in sections:
+            # Apply the base/root config.ini settings after external files are done
+            if ckey in ('base', 'root'):
+                apply_ini_by_name(cp, 'config:base')
 
-        # Apply historically 'Configuration.h' settings everywhere
-        if ckey == 'basic':
-            apply_ini_by_name(cp, 'config:basic')
+            # Apply historically 'Configuration.h' settings everywhere
+            if ckey == 'basic':
+                apply_ini_by_name(cp, 'config:basic')
 
-        # Apply historically Configuration_adv.h settings everywhere
-        # (Some of which rely on defines in 'Conditionals_LCD.h')
-        elif ckey in ('adv', 'advanced'):
-            apply_ini_by_name(cp, 'config:advanced')
+            # Apply historically Configuration_adv.h settings everywhere
+            # (Some of which rely on defines in 'Conditionals_LCD.h')
+            elif ckey in ('adv', 'advanced'):
+                apply_ini_by_name(cp, 'config:advanced')
 
-        # Apply a specific config:<name> section directly
-        elif ckey.startswith('config:'):
-            apply_ini_by_name(cp, ckey)
+            # Apply a specific config:<name> section directly
+            elif ckey.startswith('config:'):
+                apply_ini_by_name(cp, ckey)
+
+            else:
+                apply_ini_by_name(cp, 'config:'+ckey)
 
 # Apply settings from a top level config.ini
 def apply_config_ini(cp):
