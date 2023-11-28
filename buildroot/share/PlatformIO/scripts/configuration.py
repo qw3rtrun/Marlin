@@ -217,10 +217,10 @@ def apply_sections(cp, ckey='all'):
             if ckey == 'basic':
                 apply_ini_by_name(cp, 'config:basic')
 
-        # Apply historically Configuration_adv.h settings everywhere
-        # (Some of which rely on defines in 'Conditionals-2-LCD.h')
-        elif ckey in ('adv', 'advanced'):
-            apply_ini_by_name(cp, 'config:advanced')
+            # Apply historically Configuration_adv.h settings everywhere
+            # (Some of which rely on defines in 'Conditionals-2-LCD.h')
+            elif ckey in ('adv', 'advanced'):
+                apply_ini_by_name(cp, 'config:advanced')
 
             # Apply a specific config:<name> section directly
             elif ckey.startswith('config:'):
