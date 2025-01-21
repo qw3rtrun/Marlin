@@ -4336,6 +4336,26 @@
     #define BUTTON3_DESC          "Preheat for " PREHEAT_2_LABEL
     //#define BUTTON3_IMMEDIATE
   #endif
+
+  #if ENABLED(EASYTHREED_UI)
+  // Levelling button 4
+    #define BUTTON4_PIN PA3
+    #if PIN_EXISTS(BUTTON4)
+    #define BUTTON4_HIT_STATE     HIGH
+    #define BUTTON4_WHEN_PRINTING false
+    #define BUTTON4_GCODE         "G0 Z5\nG0 X100 Y0\nG0 Z0"
+    #define BUTTON4_DESC          "Levelling Position 4"
+  #endif
+
+  // Levelling button 3
+  #define BUTTON5_PIN PA2
+  #if PIN_EXISTS(BUTTON5)
+    #define BUTTON5_HIT_STATE     HIGH
+    #define BUTTON5_WHEN_PRINTING false
+    #define BUTTON5_GCODE         "G0 Z5\nG0 X100 Y100\nG0 Z0"
+    #define BUTTON5_DESC          "Levelling Position 3"
+    #endif
+  #endif
 #endif
 
 // @section host
