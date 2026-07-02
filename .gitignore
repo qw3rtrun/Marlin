@@ -20,6 +20,9 @@
 #
 
 # Generated files
+Marlin/Configuration.h
+Marlin/Configuration_adv.h
+
 _Version.h
 bdf2u8g.exe
 genpages.exe
