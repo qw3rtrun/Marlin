@@ -10,6 +10,7 @@ from urllib.request import Request, urlopen
 from pathlib import Path
 
 verbose = 0
+stamp_added = True  # Timestamp added options. Off after [reset] so output is reproducible.
 def blab(msg, level=1):
     if verbose >= level: print(f"[config] {msg}")
 
@@ -98,8 +99,9 @@ def apply_opt(name, val):
                 elif not isdef:
                     break
                 linenum += 1
-            currtime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            lines.insert(linenum, f"{prefix}#define {added:30} // Added by config.ini {currtime}\n")
+            note = "Added by config.ini"
+            if stamp_added: note += datetime.datetime.now().strftime(" %Y-%m-%d %H:%M:%S")
+            lines.insert(linenum, f"{prefix}#define {added:30} // {note}\n")
             fullpath.write_text(''.join(lines), encoding='utf-8')
 
 # Disable all (most) defined options in the configuration files.
@@ -137,6 +139,13 @@ def disable_all_options():
         if found:
             fullpath.write_text('\n'.join(lines), encoding='utf-8')
             blab(f"Updated {file}")
+
+# Restore the Configuration headers from git HEAD so only config.ini options are applied.
+def reset_config_files():
+    global stamp_added
+    stamp_added = False
+    blab("Resetting configurations to HEAD...")
+    subprocess.call(["git", "checkout", "HEAD", "--"] + [ str(config_path(f)) for f in ("Configuration.h", "Configuration_adv.h") ])
 
 def get_pr_number():
     # GitHub Actions exposes the pull request number for pull_request events.
@@ -232,6 +241,8 @@ def apply_ini_by_name(cp, sect):
         iniok = False
         items = section_items(cp, 'config:base') + section_items(cp, 'config:root')
     else:
+        if sect not in cp.sections() and sect != 'config:none':
+            blab(f"Section [{sect}] not found", 0)
         items = section_items(cp, sect)
 
     for item in items:
@@ -257,7 +268,7 @@ def apply_sections(cp, ckey='all'):
                 apply_ini_by_name(cp, 'config:base')
 
             # Apply historically 'Configuration.h' settings everywhere
-            if ckey == 'basic':
+            elif ckey == 'basic':
                 apply_ini_by_name(cp, 'config:basic')
 
             # Apply historically Configuration_adv.h settings everywhere
@@ -281,7 +292,15 @@ def apply_config_ini(cp):
     config_keys = ['base']
     for ikey, ival in base_items:
         if ikey == 'ini_use_config':
-            config_keys = map(str.strip, ival.split(','))
+            config_keys = list(map(str.strip, ival.split(',')))
+
+    # [reset] rewrites the headers on every build. Keep their file times
+    # when the result is unchanged so the build isn't redone from scratch.
+    keep = {}
+    if '[reset]' in config_keys:
+        for fn in ("Configuration.h", "Configuration_adv.h"):
+            fp = config_path(fn)
+            if fp.exists(): keep[fp] = (fp.read_bytes(), fp.stat())
 
     # For each ini_use_config item perform an action
     for ckey in config_keys:
@@ -311,7 +330,10 @@ def apply_config_ini(cp):
         #if ckey == '[flatten]':
         #   write_flat_configs()
 
-        if ckey == '[disable]':
+        if ckey == '[reset]':
+            reset_config_files()
+
+        elif ckey == '[disable]':
             disable_all_options()
 
         elif ckey == 'all':
@@ -320,6 +342,10 @@ def apply_config_ini(cp):
         else:
             # Apply keyed sections after external files are done
             apply_sections(cp, 'config:' + ckey)
+
+    for fp, (data, st) in keep.items():
+        if fp.exists() and fp.read_bytes() == data:
+            os.utime(fp, ns=(st.st_atime_ns, st.st_mtime_ns))
 
 if __name__ == "__main__":
     #
