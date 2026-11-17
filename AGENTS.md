@@ -348,9 +348,26 @@ MarlinFirmware/                  # Repo root (this directory). `cd` here for Pla
 │   ├── Version.h                # Build version, machine name
 │   ├── config.ini               # PlatformIO extra config
 │   ├── lib/                     # Integrated libraries
-│   └── src/                     # Application source (see below)
+│   ├── src/                     # Application source (see below)
+│   └── tests/                   # Unit test sources (test_*.cpp by area)
+├── AGENTS.md                    # This document
 ├── buildroot/                   # Build infrastructure
+│   ├── bin/                     # mftest, mfenvs, opt_* config tools, run_tests
+│   ├── share/PlatformIO/        # PlatformIO board definitions & scripts
+│   ├── skills/                  # Contributor procedures (SKILL.md)
+│   ├── test-gcode/              # G-code test files
+│   └── tests/                   # Build test configurations (<env>/config-NN.ini)
 ├── ini/                         # PlatformIO platform configs
+│   ├── avr.ini, due.ini, esp32.ini
+│   ├── stm32-common.ini, stm32f1.ini, stm32f4.ini
+│   ├── stm32f7.ini, stm32h7.ini, stm32g0.ini
+│   ├── samd21.ini, samd51.ini
+│   ├── raspberrypi.ini, teensy.ini
+│   ├── at32.ini, gd32.ini, hc32.ini
+│   ├── lpc176x.ini, native.ini
+│   ├── features.ini, renamed.ini
+│   └── stm32f1-maple.ini
+├── test/                        # Unit test runner (unit_tests.cpp) and configs (NNN-name.ini)
 ├── docs/                        # Project documentation
 ├── docker/                      # Docker build environment
 ├── .github/workflows/           # CI/CD pipelines
@@ -363,168 +380,143 @@ MarlinFirmware/                  # Repo root (this directory). `cd` here for Pla
 Marlin/src/
 ├── MarlinCore.cpp/h         # Firmware entry, setup(), loop(), Marlin singleton
 ├── core/                    # Core utilities (serial, language, types, mstring)
-│   ├── gcode/                   # G-code subsystem
-│   │   ├── gcode.cpp/h          # GcodeSuite dispatcher
-│   │   ├── parser.cpp/h         # GCodeParser
-│   │   ├── queue.cpp/h          # GCodeQueue ring buffer
-│   │   ├── motion/              # G0-G6, M290, M400
-│   │   ├── temp/                # M104-M109, M140-M193, M303
-│   │   ├── config/              # M200-M205, M301, M92, M218
-│   │   ├── calibrate/           # G28, G33, G34, G425, M48
-│   │   ├── bedlevel/            # G26, G35, G42, M420
-│   │   ├── geometry/            # G17-G19, G53-G59, G92
-│   │   ├── probe/               # G30-G38, M851, M401
-│   │   ├── sd/                  # M20-M34, M928
-│   │   ├── lcd/                 # M0, M1, M73, M117
-│   │   ├── host/                # M16, M110-M119
-│   │   ├── eeprom/              # M500-M504
-│   │   ├── stats/               # M31, M75-M78
-│   │   ├── units/               # G20/G21, M82/M83
-│   │   └── control/             # M3-M5, M7-M9, M17-M85, T
-│   ├── module/                  # Core modules
-│   │   ├── motion.h/cpp         # Axis positioning, kinematics
-│   │   ├── planner.h/cpp        # Block buffer, trapezoidal profiling
-│   │   ├── stepper.h/cpp        # Step pulses, TMC drivers
-│   │   ├── temperature.h/cpp    # PID, thermistors, safety
-│   │   ├── endstops.h/cpp       # Endstop interrupts, homing
-│   │   ├── probe.h/cpp          # Bed probing, Z-offset
-│   │   ├── settings.h/cpp       # EEPROM persistence
-│   │   ├── delta.h/cpp          # Delta kinematics
-│   │   ├── scara.h/cpp          # Scara kinematics
-│   │   ├── polar.h/cpp          # Polar kinematics
-│   │   ├── polargraph.h/cpp     # Polar graph kinematics
-│   │   ├── servo.h/cpp          # Servo control
-│   │   ├── printcounter.h/cpp   # Print statistics
-│   │   ├── tool_change.h/cpp    # Multi-extruder switching
-│   │   ├── ft_motion/           # Fine-tune motion
-│   │   └── stepper/             # Stepper internals, Trinamic
-│   ├── feature/                 # 80+ optional features
-│   │   ├── bedlevel/            # UBL, MBL, ABL
-│   │   ├── leds/                # LED color control
-│   │   ├── mmu/                 # Multi-material unit
-│   │   ├── mmu3/                # MMU3 variant
-│   │   ├── powerloss.h/cpp      # Power loss recovery
-│   │   ├── runout.h/cpp         # Filament runout detection
-│   │   ├── pause.h/cpp          # Pause/resume
-│   │   ├── mixing.h/cpp         # Mixed extruder
-│   │   ├── fwretract.h/cpp      # Firmware retraction
-│   │   ├── resonance/           # Resonance compensation
-│   │   ├── spindle_laser.h/cpp  # Spindle/laser control
-│   │   ├── ethernet.h/cpp       # Ethernet connectivity
-│   │   ├── solenoid.h/cpp       # Solenoid control
-│   │   ├── password/            # Password protection
-│   │   ├── joystick.h/cpp       # Joystick input
-│   │   ├── tmc_util.h/cpp       # TMC driver utilities
-│   │   └── ...                  # 60+ more features
-│   ├── lcd/                     # Display/UI subsystem
-│   │   ├── marlinui.h/cpp        # Main UI controller
-│   │   ├── HD44780/             # Hitachi HD44780 LCD
-│   │   ├── dogm/                # DOGM OLED/LCD
-│   │   ├── tft/                 # TFT displays
-│   │   ├── tft_io/              # TFT I/O drivers
-│   │   ├── dwin/                # DWIN displays
-│   │   ├── extui/               # Extensible UI (MKS LVGL)
-│   │   ├── menu/                # Menu system
-│   │   ├── touch/               # Touch screen
-│   │   ├── language/            # Multi-language strings
-│   │   └── sovol_rts/           # Sovol RTS display
-│   ├── libs/                    # Utility libraries
-│   │   ├── bresenham.h          # Bresenham line algorithm
-│   │   ├── vector_3.h/cpp       # 3D vector math
-│   │   ├── circularqueue.h      # Generic circular queue
-│   │   ├── adc/                 # ADC utilities
-│   │   ├── heatshrink/          # Decompression
-│   │   ├── nozzle.cpp/h         # Nozzle cleaning
-│   │   ├── numtostr.h/cpp       # Number-to-string
-│   │   ├── hex_print.h/cpp      # Hex printing
-│   │   ├── crc16.h/cpp          # CRC-16 calculation
-│   │   ├── stopwatch.h/cpp      # Stopwatch utility
-│   │   ├── least_squares_fit.h  # Least squares fitting
-│   │   └── ...                  # 15+ utility libs
-│   ├── sd/                      # SD card subsystem
-│   │   ├── cardreader.h/cpp     # Card reader interface
-│   │   ├── SdFat*               # SdFat library (file system)
-│   │   ├── disk_io_driver.h     # Disk I/O abstraction
-│   │   └── usb_flashdrive/      # USB flash drive support
-│   ├── pins/                    # Pin definitions (400+ files)
-│   │   ├── pins.h               # Pin inclusion router
-│   │   ├── ramps/               # Ramps board family
-│   │   ├── mega/                # Mega board family
-│   │   ├── rambo/               # Rambo board family
-│   │   ├── sanguino/            # Sanguino board family
-│   │   ├── stm32f1/             # STM32F1 boards
-│   │   ├── stm32f4/             # STM32F4 boards
-│   │   ├── stm32f7/             # STM32F7 boards
-│   │   ├── stm32h7/             # STM32H7 boards
-│   │   ├── stm32g0/             # STM32G0 boards
-│   │   ├── stm32f0/             # STM32F0 boards
-│   │   ├── sam/                 # SAM boards
-│   │   ├── samd/                # SAMD boards
-│   │   ├── rp2040/              # RP2040 boards
-│   │   ├── lpc1768/             # LPC1768 boards
-│   │   ├── lpc1769/             # LPC1769 boards
-│   │   ├── teensy2/             # Teensy 2.x boards
-│   │   ├── teensy3/             # Teensy 3.x boards
-│   │   ├── teensy4/             # Teensy 4.x boards
-│   │   ├── esp32/               # ESP32 boards
-│   │   ├── gd32f1/              # GD32F1 boards
-│   │   ├── gd32f3/              # GD32F3 boards
-│   │   ├── hc32f4/              # HC32F4 boards
-│   │   ├── at32f4/              # AT32F4 boards
-│   │   └── native/              # Native/simulator
-│   ├── HAL/                     # Hardware Abstraction Layer
-│   │   ├── HAL.h                # HAL interface definition
-│   │   ├── platforms.h          # Platform selection
-│   │   ├── shared/              # Cross-platform HAL code
-│   │   │   ├── HAL.cpp/h        # Shared HAL implementation
-│   │   │   ├── Delay.h          # Safe delay function
-│   │   │   ├── eeprom_api.h     # EEPROM API
-│   │   │   ├── cpu_exception/   # Exception handling
-│   │   │   └── backtrace/       # Stack backtrace
-│   │   ├── STM32/               # STM32 platform HAL
-│   │   ├── AVR/                 # AVR platform HAL
-│   │   ├── ESP32/               # ESP32 platform HAL
-│   │   ├── DUE/                 # Arduino Due HAL
-│   │   ├── SAMD21/              # SAMD21 HAL
-│   │   ├── SAMD51/              # SAMD51 HAL
-│   │   ├── RP2040/              # RP2040 HAL
-│   │   ├── LPC1768/             # LPC1768 HAL
-│   │   ├── GD32_MFL/            # GD32 HAL
-│   │   ├── HC32/                # HC32 HAL
-│   │   ├── AT32/                # AT32 HAL
-│   │   ├── TEENSY31_32/         # Teensy 3.1/3.2 HAL
-│   │   ├── TEENSY35_36/         # Teensy 3.5/3.6 HAL
-│   │   ├── TEENSY40_41/         # Teensy 4.0/4.1 HAL
-│   │   ├── STM32F1/             # STM32F1 HAL
-│   │   ├── LINUX/               # Linux simulator HAL
-│   │   └── NATIVE_SIM/          # Native simulator HAL
-│   └── tests/                   # Unit tests
-│       ├── unit_tests.h/cpp     # Test suite
-│       └── *.ini                # Test configurations
-├── docs/                        # Project documentation
-│   ├── AGENTS.md                # This document
-│   └── diagrams/                # Architecture diagrams
-│       ├── high-level-architecture.drawio
-│       ├── processing-pipeline.drawio
-│       └── component-relationships.drawio
-├── buildroot/                   # Build infrastructure
-│   ├── share/PlatformIO/        # PlatformIO board definitions & scripts
-│   ├── test-gcode/              # G-code test files
-│   └── tests/                   # Build test configurations
-├── ini/                         # PlatformIO platform configs
-│   ├── avr.ini, due.ini, esp32.ini
-│   ├── stm32-common.ini, stm32f1.ini, stm32f4.ini
-│   ├── stm32f7.ini, stm32h7.ini, stm32g0.ini
-│   ├── samd21.ini, samd51.ini
-│   ├── raspberrypi.ini, teensy.ini
-│   ├── at32.ini, gd32.ini, hc32.ini
-│   ├── lpc176x.ini, native.ini
-│   ├── features.ini, renamed.ini
-│   └── stm32f1-maple.ini
-├── test/                        # Root-level test configurations
-├── docker/                      # Docker build environment
-├── .github/workflows/           # CI/CD pipelines
-└── platformio.ini               # Main PlatformIO configuration
+├── gcode/                   # G-code subsystem
+│   ├── gcode.cpp/h          # GcodeSuite dispatcher
+│   ├── parser.cpp/h         # GCodeParser
+│   ├── queue.cpp/h          # GCodeQueue ring buffer
+│   ├── motion/              # G0-G6, M290, M400
+│   ├── temp/                # M104-M109, M140-M193, M303
+│   ├── config/              # M200-M205, M301, M92, M218
+│   ├── calibrate/           # G28, G33, G34, G425, M48
+│   ├── bedlevel/            # G26, G35, G42, M420
+│   ├── geometry/            # G17-G19, G53-G59, G92
+│   ├── probe/               # G30-G38, M851, M401
+│   ├── sd/                  # M20-M34, M928
+│   ├── lcd/                 # M0, M1, M73, M117
+│   ├── host/                # M16, M110-M119
+│   ├── eeprom/              # M500-M504
+│   ├── stats/               # M31, M75-M78
+│   ├── units/               # G20/G21, M82/M83
+│   └── control/             # M3-M5, M7-M9, M17-M85, T
+├── module/                  # Core modules
+│   ├── motion.h/cpp         # Axis positioning, kinematics
+│   ├── planner.h/cpp        # Block buffer, trapezoidal profiling
+│   ├── stepper.h/cpp        # Step pulses, TMC drivers
+│   ├── temperature.h/cpp    # PID, thermistors, safety
+│   ├── endstops.h/cpp       # Endstop interrupts, homing
+│   ├── probe.h/cpp          # Bed probing, Z-offset
+│   ├── settings.h/cpp       # EEPROM persistence
+│   ├── delta.h/cpp          # Delta kinematics
+│   ├── scara.h/cpp          # Scara kinematics
+│   ├── polar.h/cpp          # Polar kinematics
+│   ├── polargraph.h/cpp     # Polar graph kinematics
+│   ├── servo.h/cpp          # Servo control
+│   ├── printcounter.h/cpp   # Print statistics
+│   ├── tool_change.h/cpp    # Multi-extruder switching
+│   ├── ft_motion/           # Fine-tune motion
+│   └── stepper/             # Stepper internals, Trinamic
+├── feature/                 # 80+ optional features
+│   ├── bedlevel/            # UBL, MBL, ABL
+│   ├── leds/                # LED color control
+│   ├── mmu/                 # Multi-material unit
+│   ├── mmu3/                # MMU3 variant
+│   ├── powerloss.h/cpp      # Power loss recovery
+│   ├── runout.h/cpp         # Filament runout detection
+│   ├── pause.h/cpp          # Pause/resume
+│   ├── mixing.h/cpp         # Mixed extruder
+│   ├── fwretract.h/cpp      # Firmware retraction
+│   ├── resonance/           # Resonance compensation
+│   ├── spindle_laser.h/cpp  # Spindle/laser control
+│   ├── ethernet.h/cpp       # Ethernet connectivity
+│   ├── solenoid.h/cpp       # Solenoid control
+│   ├── password/            # Password protection
+│   ├── joystick.h/cpp       # Joystick input
+│   ├── tmc_util.h/cpp       # TMC driver utilities
+│   └── ...                  # 60+ more features
+├── lcd/                     # Display/UI subsystem
+│   ├── marlinui.h/cpp        # Main UI controller
+│   ├── HD44780/             # Hitachi HD44780 LCD
+│   ├── dogm/                # DOGM OLED/LCD
+│   ├── tft/                 # TFT displays
+│   ├── tft_io/              # TFT I/O drivers
+│   ├── dwin/                # DWIN displays
+│   ├── extui/               # Extensible UI (MKS LVGL)
+│   ├── menu/                # Menu system
+│   ├── touch/               # Touch screen
+│   ├── language/            # Multi-language strings
+│   └── sovol_rts/           # Sovol RTS display
+├── libs/                    # Utility libraries
+│   ├── bresenham.h          # Bresenham line algorithm
+│   ├── vector_3.h/cpp       # 3D vector math
+│   ├── circularqueue.h      # Generic circular queue
+│   ├── adc/                 # ADC utilities
+│   ├── heatshrink/          # Decompression
+│   ├── nozzle.cpp/h         # Nozzle cleaning
+│   ├── numtostr.h/cpp       # Number-to-string
+│   ├── hex_print.h/cpp      # Hex printing
+│   ├── crc16.h/cpp          # CRC-16 calculation
+│   ├── stopwatch.h/cpp      # Stopwatch utility
+│   ├── least_squares_fit.h  # Least squares fitting
+│   └── ...                  # 15+ utility libs
+├── sd/                      # SD card subsystem
+│   ├── cardreader.h/cpp     # Card reader interface
+│   ├── SdFat*               # SdFat library (file system)
+│   ├── disk_io_driver.h     # Disk I/O abstraction
+│   └── usb_flashdrive/      # USB flash drive support
+├── pins/                    # Pin definitions (400+ files)
+│   ├── pins.h               # Pin inclusion router
+│   ├── ramps/               # Ramps board family
+│   ├── mega/                # Mega board family
+│   ├── rambo/               # Rambo board family
+│   ├── sanguino/            # Sanguino board family
+│   ├── stm32f1/             # STM32F1 boards
+│   ├── stm32f4/             # STM32F4 boards
+│   ├── stm32f7/             # STM32F7 boards
+│   ├── stm32h7/             # STM32H7 boards
+│   ├── stm32g0/             # STM32G0 boards
+│   ├── stm32f0/             # STM32F0 boards
+│   ├── sam/                 # SAM boards
+│   ├── samd/                # SAMD boards
+│   ├── rp2040/              # RP2040 boards
+│   ├── lpc1768/             # LPC1768 boards
+│   ├── lpc1769/             # LPC1769 boards
+│   ├── teensy2/             # Teensy 2.x boards
+│   ├── teensy3/             # Teensy 3.x boards
+│   ├── teensy4/             # Teensy 4.x boards
+│   ├── esp32/               # ESP32 boards
+│   ├── gd32f1/              # GD32F1 boards
+│   ├── gd32f3/              # GD32F3 boards
+│   ├── hc32f4/              # HC32F4 boards
+│   ├── at32f4/              # AT32F4 boards
+│   └── native/              # Native/simulator
+├── HAL/                     # Hardware Abstraction Layer
+│   ├── HAL.h                # HAL interface definition
+│   ├── platforms.h          # Platform selection
+│   ├── shared/              # Cross-platform HAL code
+│   │   ├── HAL.cpp/h        # Shared HAL implementation
+│   │   ├── Delay.h          # Safe delay function
+│   │   ├── eeprom_api.h     # EEPROM API
+│   │   ├── cpu_exception/   # Exception handling
+│   │   └── backtrace/       # Stack backtrace
+│   ├── STM32/               # STM32 platform HAL
+│   ├── AVR/                 # AVR platform HAL
+│   ├── ESP32/               # ESP32 platform HAL
+│   ├── DUE/                 # Arduino Due HAL
+│   ├── SAMD21/              # SAMD21 HAL
+│   ├── SAMD51/              # SAMD51 HAL
+│   ├── RP2040/              # RP2040 HAL
+│   ├── LPC1768/             # LPC1768 HAL
+│   ├── GD32_MFL/            # GD32 HAL
+│   ├── HC32/                # HC32 HAL
+│   ├── AT32/                # AT32 HAL
+│   ├── TEENSY31_32/         # Teensy 3.1/3.2 HAL
+│   ├── TEENSY35_36/         # Teensy 3.5/3.6 HAL
+│   ├── TEENSY40_41/         # Teensy 4.0/4.1 HAL
+│   ├── STM32F1/             # STM32F1 HAL
+│   ├── LINUX/               # Linux simulator HAL
+│   └── NATIVE_SIM/          # Native simulator HAL
+├── inc/                     # Config pipeline: MarlinConfig*.h, Conditionals-*.h, SanityCheck.h
+└── tests/                   # Test harness (marlin_tests.cpp/h)
 ```
 
 ## 11. Constructing a Pull Request
